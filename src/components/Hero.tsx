@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, memo, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useMotionValue, useTransform, useSpring } from "motion/react";
 import { 
   ArrowRight, Globe, Zap, 
@@ -71,8 +71,8 @@ const badges = [
   },
 ];
 
-// Sticker Component
-function Sticker({ 
+// Sticker Component - Memoized to prevent re-renders in the complex nexus diagram
+const Sticker = memo(function Sticker({ 
   children, color, className = "", rotate = 0, delay = 0, onClick 
 }: { 
   children: React.ReactNode; color: string; className?: string; rotate?: number; delay?: number; onClick: () => void;
@@ -85,7 +85,7 @@ function Sticker({
       transition={{ type: "spring", stiffness: 200, damping: 15, delay }}
       whileHover={{ scale: 1.15, rotate: 0, zIndex: 50 }}
       onClick={onClick}
-      className={`${className} cursor-pointer`}
+      className={`${className} cursor-pointer perspective-1000`}
       style={{ transform: `translateZ(40px)`, willChange: "transform" }}
     >
       <motion.div
@@ -94,14 +94,17 @@ function Sticker({
       >
         <div className={`${color} text-black p-5 rounded-2xl shadow-[4px_6px_0px_rgba(0,0,0,0.9)] 
           border-2 border-black flex flex-col items-center gap-1 w-28 h-28 justify-center
-          hover:shadow-[6px_8px_0px_rgba(0,0,0,0.9)] transition-shadow glitch-hover`}
+          hover:shadow-[6px_8px_0px_rgba(0,0,0,0.9)] transition-shadow glitch-hover overflow-hidden`}
         >
-          {children}
+          {/* Explicit Icon Container with fixed dimensions to prevent CLS */}
+          <div className="w-10 h-10 flex items-center justify-center mb-1 shrink-0 overflow-hidden">
+            {children}
+          </div>
         </div>
       </motion.div>
     </motion.div>
   );
-}
+});
 
 export default function Hero() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -114,19 +117,28 @@ export default function Hero() {
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const rafRef = useRef<number>(0);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-    mouseX.set(x);
-    mouseY.set(y);
-  };
+  // Throttled mouse handler via requestAnimationFrame to ensure 60fps interaction
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (rafRef.current) return;
+    
+    rafRef.current = requestAnimationFrame(() => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+      mouseX.set(x);
+      mouseY.set(y);
+      rafRef.current = 0;
+    });
+  }, [mouseX, mouseY]);
 
   const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [5, -5]), { stiffness: 100, damping: 20 });
   const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-5, 5]), { stiffness: 100, damping: 20 });
-  const coreScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.2]);
-  const coreRotate = useTransform(scrollYProgress, [0, 1], [0, 45]);
+  
+  // Throttled and smoothed scroll values for "Makkhan" rotation
+  const coreScale = useSpring(useTransform(scrollYProgress, [0, 0.5], [1, 1.2]), { stiffness: 50, damping: 20 });
+  const coreRotate = useSpring(useTransform(scrollYProgress, [0, 1], [0, 45]), { stiffness: 50, damping: 20 });
 
   return (
     <section ref={sectionRef} onMouseMove={handleMouseMove} className="relative flex flex-col min-h-screen overflow-hidden bg-[#000000]">
@@ -255,7 +267,7 @@ export default function Hero() {
       {/* Visual Section - Preserved Parallax Core from original */}
       <div className="relative flex-grow rounded-t-[4rem] md:rounded-t-[8rem] overflow-hidden min-h-[400px] md:min-h-[600px] flex flex-col items-center mt-12 bg-black/60 border-t border-white/10">
         <div className="w-full pt-16 pb-8 flex justify-center z-10">
-          <h3 className="text-xs md:text-sm font-mono text-slate-500 uppercase tracking-widest text-center">
+          <h3 className="text-[10px] md:text-xs font-mono text-cyan-500/60 uppercase tracking-[0.4em] text-center">
             [ CAPABILITY MATRIX // ENGINEERING NEXUS ]
           </h3>
         </div>
@@ -281,13 +293,13 @@ export default function Hero() {
 
             {/* Central Visual (Engineering Nexus Core) */}
             <motion.div 
-              style={{ scale: coreScale, rotateZ: coreRotate, transform: "translateZ(50px)", willChange: "transform" }}
+              style={{ scale: coreScale, rotateZ: coreRotate, transform: "translateZ(50px) rotateZ(0deg)", willChange: "transform" }}
               className="backdrop-blur-xl bg-[#000000]/40 border border-white/20 rounded-3xl h-64 w-64 md:h-80 md:w-80 flex items-center justify-center shadow-[0_0_80px_rgba(0,255,255,0.15)] relative z-10 overflow-hidden"
             >
                {/* Complex Geometric Core Filaments */}
-               <div className="absolute w-[140%] h-[140%] border-[2px] border-cyan-400/20 rounded-full animate-[spin_8s_linear_infinite] will-change-transform"></div>
-               <div className="absolute w-[120%] h-[120%] border-[1px] border-pink-400/30 rounded-full animate-[spin_10s_linear_infinite_reverse] will-change-transform"></div>
-               <div className="absolute w-40 h-40 md:w-52 md:h-52 border border-orange-400/30 rotate-45 shadow-[inset_0_0_20px_rgba(255,165,0,0.2)] will-change-transform"></div>
+               <div className="absolute w-[140%] h-[140%] border-[2px] border-cyan-400/20 rounded-full animate-[spin_8s_linear_infinite] will-change-transform" style={{ transform: 'translateZ(0)' }}></div>
+               <div className="absolute w-[120%] h-[120%] border-[1px] border-pink-400/30 rounded-full animate-[spin_10s_linear_infinite_reverse] will-change-transform" style={{ transform: 'translateZ(0)' }}></div>
+               <div className="absolute w-40 h-40 md:w-52 md:h-52 border border-orange-400/30 rotate-45 shadow-[inset_0_0_20px_rgba(255,165,0,0.2)] will-change-transform" style={{ transform: 'translateZ(0)' }}></div>
                
                {/* Core inner glow */}
                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border border-white/50 animate-pulse flex items-center justify-center bg-[#050505] shadow-[0_0_30px_rgba(0,255,255,0.4)]">
@@ -307,8 +319,8 @@ export default function Hero() {
                 onClick={() => setActiveBadge(badge)}
               >
                 <div className="mb-1">{badge.icon}</div>
-                <span className="text-[10px] uppercase tracking-widest block font-bold">{badge.title.split(' ')[0]}</span>
-                <span className="text-[10px] font-medium leading-tight">{badge.title.split(' ').slice(1).join(' ')}</span>
+                <span className="text-[10px] uppercase tracking-widest block font-bold font-mono">{badge.title.split(' ')[0]}</span>
+                <span className="text-[10px] font-medium leading-tight font-mono opacity-80">{badge.title.split(' ').slice(1).join(' ')}</span>
               </Sticker>
             ))}
           </motion.div>
