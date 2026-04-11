@@ -132,7 +132,7 @@ export default function Hero() {
     <section ref={sectionRef} onMouseMove={handleMouseMove} className="relative flex flex-col min-h-screen overflow-hidden bg-[#000000]">
       {/* Video Background - High-Quality 4K intent rendering without heavy CSS filters */}
       <div className="absolute inset-0 z-0 bg-black">
-        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80" style={{ imageRendering: 'high-quality' as any }}>
+        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80 video-render-optimize">
           <source src={backgroundVideo} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-black/30" />

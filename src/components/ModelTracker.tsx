@@ -1,10 +1,20 @@
-import { Suspense, useRef, useState, useEffect } from 'react';
+import { Suspense, useRef, useState, useEffect, memo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, Environment, Html, Center, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
-function RobotModel({ isChatOpen, toggleChat }: { isChatOpen: boolean; toggleChat: () => void }) {
+const RobotModel = memo(function RobotModel({ isChatOpen, toggleChat }: { isChatOpen: boolean; toggleChat: () => void }) {
   const { scene } = useGLTF('/robot.glb');
+  const isInProtocolsRef = useRef(false);
+  
+  // Listen for protocol visibility directly via ref (no re-renders)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      isInProtocolsRef.current = (e as CustomEvent).detail.isVisible;
+    };
+    window.addEventListener('protocols-visibility', handler);
+    return () => window.removeEventListener('protocols-visibility', handler);
+  }, []);
   
   const groupRef = useRef<THREE.Group>(null);
   const dragRef = useRef<THREE.Group>(null);
@@ -84,6 +94,10 @@ function RobotModel({ isChatOpen, toggleChat }: { isChatOpen: boolean; toggleCha
         // Requirement: Eye Contact - Smoothly lerp to 0 (looking straight)
         targetRotX = 0;
         targetRotY = 0;
+      } else if (isInProtocolsRef.current) {
+        // Protocol Scanning Mode: robot points attention toward cards (left side)
+        targetRotX = -0.15;
+        targetRotY = -0.4;
       } else {
         // Running the exact existing pointer-tracking and scroll-flip logic
         const pointerTiltX = (-state.pointer.y * Math.PI) / 6;
@@ -156,7 +170,52 @@ function RobotModel({ isChatOpen, toggleChat }: { isChatOpen: boolean; toggleCha
       </Float>
     </group>
   );
-}
+});
+
+/* ─── Lights component that reads protocol state via ref ─── */
+const SceneLights = memo(function SceneLights() {
+  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const dirRef = useRef<THREE.DirectionalLight>(null);
+  const pointRef = useRef<THREE.PointLight>(null);
+  const isInProtocolsRef = useRef(false);
+
+  const cyanColor = new THREE.Color('#22d3ee');
+  const whiteColor = new THREE.Color('#ffffff');
+  const cyanDir = new THREE.Color('#06b6d4');
+  const greenPoint = new THREE.Color('#10b981');
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      isInProtocolsRef.current = (e as CustomEvent).detail.isVisible;
+    };
+    window.addEventListener('protocols-visibility', handler);
+    return () => window.removeEventListener('protocols-visibility', handler);
+  }, []);
+
+  useFrame(() => {
+    const inProto = isInProtocolsRef.current;
+    if (ambientRef.current) {
+      ambientRef.current.color.lerp(inProto ? cyanColor : whiteColor, 0.03);
+      const targetInt = inProto ? 3.5 : 2.5;
+      ambientRef.current.intensity += (targetInt - ambientRef.current.intensity) * 0.03;
+    }
+    if (dirRef.current) {
+      dirRef.current.color.lerp(inProto ? cyanDir : whiteColor, 0.03);
+    }
+    if (pointRef.current) {
+      const targetInt = inProto ? 4 : 0;
+      pointRef.current.intensity += (targetInt - pointRef.current.intensity) * 0.05;
+    }
+  });
+
+  return (
+    <>
+      <ambientLight ref={ambientRef} intensity={2.5} />
+      <directionalLight ref={dirRef} position={[5, 5, 5]} intensity={3.5} />
+      <pointLight ref={pointRef} position={[-3, 0, 3]} intensity={0} color={greenPoint} distance={8} />
+    </>
+  );
+});
 
 type Message = {
   id: number;
@@ -218,8 +277,7 @@ export default function ModelTracker() {
         eventSource={eventSource || undefined}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={2.5} />
-          <directionalLight position={[5, 5, 5]} intensity={3.5} />
+          <SceneLights />
           <Environment preset="city" />
           <RobotModel isChatOpen={isChatOpen} toggleChat={() => setIsChatOpen((prev) => !prev)} />
         </Suspense>

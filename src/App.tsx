@@ -2,6 +2,7 @@ import React from 'react';
 import ModelTracker from './components/ModelTracker';
 import Hero from './components/Hero';
 import OperatingDomains from './components/OperatingDomains';
+import ActiveProtocols from './components/ActiveProtocols';
 import Work from './components/Work';
 import Contact from './components/Contact';
 
@@ -19,6 +20,7 @@ function App() {
         <div className="pointer-events-auto">
           <Hero />
           <OperatingDomains />
+          <ActiveProtocols />
           <Work />
           <Contact />
         </div>

@@ -1,4 +1,4 @@
-import { useState, MouseEvent } from "react";
+import { useState, MouseEvent, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from "motion/react";
 import { Plus, Minus, Cpu, Network, Code2, Workflow } from "lucide-react";
 
@@ -82,12 +82,18 @@ export default function OperatingDomains() {
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const rafRef = useRef<number>(0);
 
-  function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-  }
+  // rAF-throttled mouse handler for 60fps cap
+  const handleMouseMove = useCallback(({ currentTarget, clientX, clientY }: MouseEvent) => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      const { left, top } = currentTarget.getBoundingClientRect();
+      mouseX.set(clientX - left);
+      mouseY.set(clientY - top);
+      rafRef.current = 0;
+    });
+  }, [mouseX, mouseY]);
 
   const toggleExpand = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
@@ -145,7 +151,7 @@ export default function OperatingDomains() {
               onClick={() => toggleExpand(domain.id)}
               /* Requirement: Zero-Lag CSS Hover, Hardware Acceleration, and Colorful Theme */
               className={`relative cursor-pointer group bg-gradient-to-br ${domain.theme} border border-white/10 rounded-2xl 
-                shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-500 flex flex-col overflow-hidden backdrop-blur-xl
+                shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-500 flex flex-col overflow-hidden
                 will-change-transform transform-gpu hover:scale-[1.02] hover:-translate-y-1 hover:border-white/30 
                 hover:shadow-[0_20px_50px_rgba(0,0,0,0.7)] hover:z-20`}
             >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from "motion/react";
 import { X, ArrowRight } from "lucide-react";
 
@@ -32,15 +32,20 @@ const projects = [
 export default function Work() {
   const [activeProject, setActiveProject] = useState<typeof projects[0] | null>(null);
 
-  // Spotlight mouse tracking logic for crazy futuristic effect
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const rafRef = useRef<number>(0);
 
-  function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-  }
+  // rAF-throttled mouse handler
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      const { left, top } = e.currentTarget.getBoundingClientRect();
+      mouseX.set(e.clientX - left);
+      mouseY.set(e.clientY - top);
+      rafRef.current = 0;
+    });
+  }, [mouseX, mouseY]);
 
   return (
     <section 
@@ -112,7 +117,7 @@ export default function Work() {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ delay: index * 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setActiveProject(project)}
-              className="group relative cursor-pointer bg-[#0a0a0a]/60 backdrop-blur-md rounded-[2rem] border border-white/5 shadow-[0_15px_30px_rgba(0,0,0,0.8)] hover:border-cyan-500/30 hover:shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+              className="group relative cursor-pointer bg-[#0a0a0a]/60 rounded-[2rem] border border-white/5 shadow-[0_15px_30px_rgba(0,0,0,0.8)] hover:border-cyan-500/30 hover:shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:-translate-y-2 transition-all duration-500 overflow-hidden"
             >
               <div className="aspect-[4/5] overflow-hidden relative">
                 {/* Dark Vignette Overlay over image */}
@@ -128,7 +133,7 @@ export default function Work() {
 
               {/* Tag Label */}
               <div className="absolute top-6 left-6 z-20">
-                <div className={`px-3 py-1 border rounded-full backdrop-blur-md ${project.tagColor} border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
+                <div className={`px-3 py-1 border rounded-full bg-black/60 ${project.tagColor} border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
                   <span className="text-[9px] font-black tracking-widest uppercase">{project.tag}</span>
                 </div>
               </div>
@@ -141,7 +146,7 @@ export default function Work() {
               </div>
 
               {/* Hover Pill Button */}
-              <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20 backdrop-blur-[2px]">
+              <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/30">
                 <div className="px-6 py-3 bg-cyan-500 text-white font-bold text-sm rounded-full shadow-[0_0_30px_rgba(6,182,212,0.6)] flex items-center gap-2 scale-90 translate-y-4 group-hover:translate-y-0 group-hover:scale-100 transition-all duration-500">
                   Execute Instance <ArrowRight size={14} />
                 </div>
@@ -160,7 +165,7 @@ export default function Work() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveProject(null)}
-              className="absolute inset-0 bg-[#030303]/80 backdrop-blur-3xl"
+              className="absolute inset-0 bg-[#030303]/90"
             />
             
             <motion.div 
