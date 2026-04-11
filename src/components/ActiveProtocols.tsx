@@ -10,7 +10,7 @@ const protocols = [
       "Real-time virtual canvas using Computer Vision. Tracks hand gestures to draw on-screen without physical touch.",
     tags: ["Python", "OpenCV", "MediaPipe"],
     icon: <Camera size={28} />,
-    source: "#", // Replace with actual GitHub link
+    source: "https://github.com/amanguptawork124-collab/Air-Canvas-CV.git",
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const protocols = [
       "Deep Learning model for facial expression recognition. Serving as the core logic for a future empathetic AI assistant.",
     tags: ["Python", "TensorFlow", "Computer Vision"],
     icon: <Brain size={28} />,
-    source: "#", // Replace with actual GitHub link
+    source: "https://github.com/amanguptawork124-collab/facial-emotion-recognition-v1.git",
   },
 ];
 
