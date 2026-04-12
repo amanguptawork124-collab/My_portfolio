@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useScroll, useMotionValue, useTransform, useSp
 import { 
   ArrowRight, Globe, Zap, 
   Brain, Cpu, ShieldCheck, Terminal, X,
-  GraduationCap, MapPin, Code2
+  GraduationCap, Code2
 } from "lucide-react";
 import backgroundVideo from "./assets/Smoother_looping_animation_202603271417.mp4";
 
@@ -71,33 +71,43 @@ const badges = [
   },
 ];
 
-// Sticker Component - Memoized to prevent re-renders in the complex nexus diagram
+const colorMap: Record<string, { border: string; text: string }> = {
+  "bg-brand-teal": { border: "border-brand-teal", text: "text-brand-teal" },
+  "bg-brand-yellow": { border: "border-brand-yellow", text: "text-brand-yellow" },
+  "bg-brand-orange": { border: "border-brand-orange", text: "text-brand-orange" },
+  "bg-brand-pink": { border: "border-brand-pink", text: "text-brand-pink" },
+  "bg-brand-green": { border: "border-brand-green", text: "text-brand-green" },
+};
+
 const Sticker = memo(function Sticker({ 
   children, color, className = "", rotate = 0, delay = 0, onClick 
 }: { 
   children: React.ReactNode; color: string; className?: string; rotate?: number; delay?: number; onClick: () => void;
 }) {
+  const mappedColors = colorMap[color] || { border: "border-white/30", text: "text-white" };
+  
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5, rotate: rotate - 15 }}
-      whileInView={{ opacity: 1, scale: 1, rotate }}
-      viewport={{ once: true }}
-      transition={{ type: "spring", stiffness: 200, damping: 15, delay }}
+      layout="position"
+      initial={{ opacity: 1, scale: 1, rotate }}
+      animate={{ opacity: 1, scale: 1, rotate }}
       whileHover={{ scale: 1.15, rotate: 0, zIndex: 50 }}
       onClick={onClick}
       className={`${className} cursor-pointer perspective-1000`}
       style={{ transform: `translateZ(40px)`, willChange: "transform" }}
     >
       <motion.div
+        layout="position"
         animate={{ y: [0, -10, 0] }}
         transition={{ duration: 4 + delay, repeat: Infinity, ease: "easeInOut" }}
       >
-        <div className={`${color} text-black p-5 rounded-2xl shadow-[4px_6px_0px_rgba(0,0,0,0.9)] 
-          border-2 border-black flex flex-col items-center gap-1 w-28 h-28 justify-center
-          hover:shadow-[6px_8px_0px_rgba(0,0,0,0.9)] transition-shadow glitch-hover overflow-hidden`}
+        <div className={`bg-black/60 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] 
+          border-2 ${mappedColors.border} rounded-2xl flex flex-col items-center justify-center text-center gap-1 p-4
+          w-max min-w-[120px] max-w-[180px] h-auto transition-all glitch-hover
+          whitespace-pre-wrap break-words`}
         >
-          {/* Explicit Icon Container with fixed dimensions to prevent CLS */}
-          <div className="w-10 h-10 flex items-center justify-center mb-1 shrink-0 overflow-hidden">
+          {/* Explicit Icon Container with dynamic text color */}
+          <div className={`w-8 h-8 flex items-center justify-center mb-1 shrink-0 ${mappedColors.text} drop-shadow-[0_0_8px_currentColor]`}>
             {children}
           </div>
         </div>
@@ -273,7 +283,7 @@ export default function Hero() {
         </div>
         
         {/* Tightly Clustered Mobile Container */}
-        <div style={{ perspective: 1200 }} className="relative w-full max-w-[340px] md:max-w-6xl h-[400px] md:h-[500px] flex items-center justify-center mx-auto">
+        <div style={{ perspective: 1200 }} className="relative w-full max-w-[340px] md:max-w-6xl h-[400px] md:h-[500px] flex items-center justify-center mx-auto will-change-transform">
           
           <motion.div 
             className="relative w-full h-full flex items-center justify-center"
@@ -281,13 +291,13 @@ export default function Hero() {
           >
             {/* SVG Circuit Lines */}
             <div className="absolute inset-0 pointer-events-none z-[-10]" style={{ transform: "translateZ(-10px)", zIndex: -10 }}>
-               <svg className="w-full h-full opacity-50 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" style={{ zIndex: -10 }}>
-                  <line x1="50%" y1="50%" x2="10%" y2="20%" stroke="cyan" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
-                  <line x1="50%" y1="50%" x2="5%" y2="50%" stroke="magenta" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
-                  <line x1="50%" y1="50%" x2="10%" y2="80%" stroke="orange" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" style={{ animationDelay: '0.4s' }} />
-                  <line x1="50%" y1="50%" x2="90%" y2="20%" stroke="pink" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
-                  <line x1="50%" y1="50%" x2="95%" y2="50%" stroke="cyan" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" style={{ animationDelay: '0.8s' }} />
-                  <line x1="50%" y1="50%" x2="90%" y2="80%" stroke="magenta" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" style={{ animationDelay: '1s' }} />
+               <svg className="w-full h-full opacity-30 pointer-events-none will-change-transform" style={{ zIndex: -10 }}>
+                  <line x1="50%" y1="50%" x2="10%" y2="20%" stroke="cyan" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse will-change-transform" />
+                  <line x1="50%" y1="50%" x2="5%" y2="50%" stroke="magenta" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse will-change-transform" style={{ animationDelay: '0.2s' }} />
+                  <line x1="50%" y1="50%" x2="10%" y2="80%" stroke="orange" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse will-change-transform" style={{ animationDelay: '0.4s' }} />
+                  <line x1="50%" y1="50%" x2="90%" y2="20%" stroke="pink" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse will-change-transform" style={{ animationDelay: '0.6s' }} />
+                  <line x1="50%" y1="50%" x2="95%" y2="50%" stroke="cyan" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse will-change-transform" style={{ animationDelay: '0.8s' }} />
+                  <line x1="50%" y1="50%" x2="90%" y2="80%" stroke="magenta" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse will-change-transform" style={{ animationDelay: '1s' }} />
                </svg>
             </div>
 
@@ -296,10 +306,22 @@ export default function Hero() {
               style={{ scale: coreScale, rotateZ: coreRotate, transform: "translateZ(50px) rotateZ(0deg)", willChange: "transform" }}
               className="backdrop-blur-xl bg-[#000000]/40 border border-white/20 rounded-3xl h-64 w-64 md:h-80 md:w-80 flex items-center justify-center shadow-[0_0_80px_rgba(0,255,255,0.15)] relative z-10 overflow-hidden"
             >
-               {/* Complex Geometric Core Filaments */}
-               <div className="absolute w-[140%] h-[140%] border-[2px] border-cyan-400/20 rounded-full animate-[spin_8s_linear_infinite] will-change-transform" style={{ transform: 'translateZ(0)' }}></div>
-               <div className="absolute w-[120%] h-[120%] border-[1px] border-pink-400/30 rounded-full animate-[spin_10s_linear_infinite_reverse] will-change-transform" style={{ transform: 'translateZ(0)' }}></div>
-               <div className="absolute w-40 h-40 md:w-52 md:h-52 border border-orange-400/30 rotate-45 shadow-[inset_0_0_20px_rgba(255,165,0,0.2)] will-change-transform" style={{ transform: 'translateZ(0)' }}></div>
+               {/* Complex Geometric Core Filaments High Speed Rotation */}
+               <motion.div 
+                  className="absolute w-[140%] h-[140%] border-[2px] border-cyan-400/20 rounded-full will-change-transform" 
+                  style={{ transform: 'translateZ(0)' }}
+                  animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+               />
+               <motion.div 
+                  className="absolute w-[120%] h-[120%] border-[1px] border-pink-400/30 rounded-full will-change-transform" 
+                  style={{ transform: 'translateZ(0)' }}
+                  animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 5, ease: "linear" }}
+               />
+               <motion.div 
+                  className="absolute w-40 h-40 md:w-52 md:h-52 border border-orange-400/30 shadow-[inset_0_0_20px_rgba(255,165,0,0.2)] will-change-transform" 
+                  style={{ transform: 'translateZ(0)' }}
+                  animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+               />
                
                {/* Core inner glow */}
                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border border-white/50 animate-pulse flex items-center justify-center bg-[#050505] shadow-[0_0_30px_rgba(0,255,255,0.4)]">
@@ -318,57 +340,59 @@ export default function Hero() {
                 delay={badge.delay}
                 onClick={() => setActiveBadge(badge)}
               >
-                <div className="mb-1">{badge.icon}</div>
-                <span className="text-[10px] uppercase tracking-widest block font-bold font-mono">{badge.title.split(' ')[0]}</span>
-                <span className="text-[10px] font-medium leading-tight font-mono opacity-80">{badge.title.split(' ').slice(1).join(' ')}</span>
+                <div className="mb-0.5">{badge.icon}</div>
+                <span className={`font-mono text-xs md:text-sm font-bold uppercase tracking-wider ${colorMap[badge.color]?.text || 'text-white'} block text-center leading-tight whitespace-pre-wrap`}>
+                  {badge.title}
+                </span>
               </Sticker>
             ))}
           </motion.div>
         </div>
       </div>
 
-      {/* Modal Overlay System */}
+      {/* Glassmorphism Informational Modal Logic */}
       <AnimatePresence>
         {activeBadge && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveBadge(null)}
-              className="absolute inset-0 bg-[#000000]/80 backdrop-blur-md"
+              className="absolute inset-0"
             />
             
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              initial={{ scale: 0.8, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-[#050505] border border-white/10 rounded-3xl p-10 max-w-md w-full shadow-[0_0_50px_rgba(0,255,255,0.1)] text-white"
+              exit={{ scale: 0.8, opacity: 0, y: 30 }}
+              className={`relative bg-black/40 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-md w-full shadow-[0_0_30px_rgba(0,255,255,0.2)] text-white`}
             >
               <button 
                 onClick={() => setActiveBadge(null)}
-                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/20 transition-colors"
+                aria-label="Close modal"
               >
-                <X size={24} className="text-slate-400" />
+                <X size={20} className="text-white" />
               </button>
 
-              <div className={`w-16 h-16 ${activeBadge.color} rounded-2xl flex items-center justify-center mb-8 shadow-lg`}>
+              <div className={`w-14 h-14 ${activeBadge.color} rounded-xl flex items-center justify-center mb-6 shadow-md`}>
                 <div className="text-black">{activeBadge.icon}</div>
               </div>
 
-              <h3 className="text-white text-2xl md:text-3xl font-display uppercase mb-4 leading-tight">
+              <h3 className={`text-white text-xl md:text-2xl font-mono uppercase mb-3 leading-tight tracking-wider font-bold`}>
                 {activeBadge.title}
               </h3>
               
-              <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8">
+              <p className="text-slate-200 text-sm md:text-base font-mono leading-relaxed mb-6 whitespace-pre-wrap">
                 {activeBadge.description}
               </p>
 
               <button 
                 onClick={() => setActiveBadge(null)}
-                className="w-full py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-cyan-400 transition-colors"
+                className={`w-full py-3 bg-white/10 text-white border border-white/30 rounded-xl font-mono font-bold uppercase tracking-widest text-xs hover:bg-white/30 transition-colors`}
               >
-                Close Details
+                Dismiss
               </button>
             </motion.div>
           </div>
