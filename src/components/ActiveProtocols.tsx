@@ -125,7 +125,7 @@ const TiltCard = memo(function TiltCard({ children, className }: { children: Rea
       ref={ref}
       onMouseMove={handleMouse}
       onMouseLeave={handleLeave}
-      style={{ rotateX, rotateY, transformPerspective: 800 }}
+      style={{ rotateX, rotateY, transformPerspective: 800, translateZ: 0, willChange: "transform" }}
       className={className}
     >
       {children}
@@ -137,48 +137,49 @@ const TiltCard = memo(function TiltCard({ children, className }: { children: Rea
 const ProtocolCard = memo(function ProtocolCard({ protocol, index }: { protocol: typeof protocols[0]; index: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: false, amount: 0.2 }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
       transition={{
-        delay: index * 0.15,
-        duration: 0.7,
-        ease: [0.22, 1, 0.36, 1],
+        delay: index * 0.1,
+        duration: 0.5,
+        ease: "easeOut",
       }}
+      style={{ translateZ: 0, willChange: "transform, opacity" }}
     >
-      <TiltCard className="group relative bg-[#0a0a0a]/70 rounded-2xl border-[1.5px] border-white/[0.08] shadow-[0_15px_30px_rgba(0,0,0,0.8)] hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.2)] hover:-translate-y-2 transition-all duration-500 overflow-hidden">
+      <TiltCard className="group relative bg-white/[0.03] border border-white/[0.08] rounded-2xl backdrop-blur-md shadow-2xl hover:-translate-y-1 hover:border-cyan-500/30 transition-all duration-300 overflow-hidden">
         {/* STATUS: LIVE Badge */}
-        <div className="absolute top-5 right-5 z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0a0a0a]/90 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+        <div className="absolute top-5 right-5 z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 backdrop-blur-md shadow-xl">
           <span className="w-[6px] h-[6px] rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
           <span className="text-emerald-400 text-[9px] font-mono font-bold tracking-widest uppercase">
             STATUS: LIVE
           </span>
         </div>
 
-        <div className="p-8 md:p-10">
+        <div className="p-8 md:p-10 relative z-10">
           {/* Icon & Title Row */}
-          <div className="flex items-start gap-5 mb-6">
-            <div className="text-cyan-400/80 group-hover:text-cyan-300 transition-colors duration-300 mt-1 shrink-0">
+          <div className="flex items-start gap-4 mb-5">
+            <div className="text-cyan-400/80 group-hover:text-cyan-400 transition-colors duration-300 mt-1 shrink-0">
               {protocol.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-display text-white text-2xl md:text-3xl uppercase leading-tight tracking-tight group-hover:text-cyan-50 transition-colors duration-300">
+              <h3 className="font-mono tracking-wide text-gray-300 text-lg md:text-xl font-medium leading-tight">
                 {protocol.title}
               </h3>
             </div>
           </div>
 
           {/* Description */}
-          <p className="text-slate-400 text-base leading-relaxed font-light mb-8 pl-0 md:pl-[52px]">
+          <p className="text-gray-400 text-sm leading-relaxed font-mono tracking-wide mb-8 pl-0 md:pl-[44px]">
             {protocol.description}
           </p>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-8 pl-0 md:pl-[52px]">
+          <div className="flex flex-wrap gap-2 mb-8 pl-0 md:pl-[44px]">
             {protocol.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full bg-white/5 border border-white/10 text-cyan-400/70 group-hover:border-cyan-500/20 group-hover:text-cyan-400 transition-colors duration-300"
+                className="px-3 py-1 text-xs font-mono tracking-wide rounded-md bg-white/5 border border-white/5 text-gray-300 group-hover:border-white/10 transition-colors duration-300"
               >
                 {tag}
               </span>
@@ -248,12 +249,16 @@ export default function ActiveProtocols() {
     <section
       ref={sectionRef}
       id="protocols"
-      className="py-32 bg-[#000000] overflow-hidden relative"
+      className="py-32 bg-[#0a0a0a] overflow-hidden relative"
       onMouseMove={handleMouseMove}
     >
+      {/* Matrix Background Effect */}
+      <div className="absolute inset-0 z-0 bg-matrix-pattern opacity-10 pointer-events-none mix-blend-screen" />
+      {/* Gradient Overlay for Readability */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a0a0a]/90 via-transparent to-[#0a0a0a]/90 pointer-events-none" />
+
       {/* Partition Glowing Line */}
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/80 to-transparent shadow-[0_0_30px_rgba(6,182,212,1)] z-50" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[1px] bg-cyan-300 blur-[2px] z-50" />
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-50 opacity-60" />
 
       {/* Animated Particle Grid (lower z-index, absolute) */}
       <ParticleGrid />
@@ -290,15 +295,16 @@ export default function ActiveProtocols() {
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-6xl md:text-8xl lg:text-9xl text-white uppercase tracking-tighter leading-[0.85] mb-6"
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+            style={{ translateZ: 0, willChange: "transform, opacity" }}
+            className="font-display text-5xl md:text-7xl lg:text-8xl text-white uppercase tracking-tighter leading-[0.9] mb-4"
           >
-            Active<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">
-              Protocols
+            ACTIVE<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">
+              PROTOCOLS
             </span>
           </motion.h2>
 
@@ -307,7 +313,7 @@ export default function ActiveProtocols() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-slate-400 text-lg md:text-xl max-w-xl font-light tracking-wide"
+            className="text-gray-300 font-mono text-sm leading-relaxed uppercase tracking-widest max-w-xl"
           >
             Current engineering sprints and real-time AI implementations.
           </motion.p>
